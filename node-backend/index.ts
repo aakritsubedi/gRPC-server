@@ -8,7 +8,11 @@ import {
   ArithmeticRequest,
   ArithmeticResponse,
 } from "./proto-generated/arithmetic";
-import { GreetServiceClient } from "./proto-generated/greet";
+import {
+  GreetServiceClient,
+  GreetResponse,
+  GreetRequest,
+} from "./proto-generated/greet";
 
 const PORT = 4000;
 
@@ -180,8 +184,8 @@ app.get("/greet", async (req: Request, res: Response) => {
         firstName: firstName as string,
         lastName: lastName as string,
         age: parseInt(age as string),
-      },
-      (err: any, response: any) => {
+      } as GreetRequest,
+      (err: any, response: GreetResponse) => {
         if (err) {
           console.error(err);
           return;
