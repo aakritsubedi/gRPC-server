@@ -1,0 +1,31 @@
+{
+  "name": "backend",
+  "version": "1.0.0",
+  "description": "backend server",
+  "main": "index.js",
+  "scripts": {
+    "start": "node dist/index.js",
+    "dev": "nodemon ./index.ts",
+    "build": "tsc --project tsconfig.json && tsc-alias -p tsconfig.json",
+    "proto:gen": "protoc --plugin=node_modules/.bin/protoc-gen-ts_proto --ts_proto_out=./proto-generated --ts_proto_opt=outputServices=grpc-js --proto_path=../proto ../proto/*.proto",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@grpc/grpc-js": "^1.12.2",
+    "@grpc/proto-loader": "^0.7.13",
+    "body-parser": "^1.20.3",
+    "express": "^4.21.1",
+    "grpc-tools": "^1.12.4"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.0",
+    "@types/node": "^22.8.1",
+    "concurrently": "^9.0.1",
+    "nodemon": "^3.1.7",
+    "ts-node": "^10.9.2",
+    "ts-proto": "^2.2.5",
+    "typescript": "^5.6.3"
+  }
+}

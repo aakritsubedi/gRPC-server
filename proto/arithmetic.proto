@@ -1,0 +1,23 @@
+// Proto Buffer Version
+syntax = "proto3";
+
+
+// Server Methods Schema
+service Arithmetic {
+    rpc add(ArithmeticRequest) returns (ArithmeticResponse);
+    rpc subtract(ArithmeticRequest) returns (ArithmeticResponse);
+    rpc multiply(ArithmeticRequest) returns (ArithmeticResponse);
+    rpc divide(ArithmeticRequest) returns (ArithmeticResponse);
+}
+
+// Client Request Body
+message ArithmeticRequest {
+    double num1 = 1;
+    double num2 = 2;
+}
+
+// Server Response Body
+message ArithmeticResponse {
+    double result = 1;
+}
+

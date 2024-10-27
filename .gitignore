@@ -1,0 +1,7 @@
+# Node Backend
+node-backend/node_modules
+node-backend/.env
+
+# Python Server
+python-server/**/__pycache__
+venv/
