@@ -13,6 +13,7 @@ import {
   GreetResponse,
   GreetRequest,
 } from "./proto-generated/greet";
+import { ChatResponse, ChatServiceClient } from "./proto-generated/chat";
 
 const PORT = 4000;
 
@@ -30,6 +31,7 @@ app.use(bodyParser.json());
 //   grpc.credentials.createInsecure()
 // );
 
+// gRPC Client
 const arithmeticClient = new ArithmeticClient(
   "localhost:50051",
   grpc.credentials.createInsecure()
@@ -38,11 +40,17 @@ const greetClient = new GreetServiceClient(
   "localhost:50051",
   grpc.credentials.createInsecure()
 );
+const chatClient = new ChatServiceClient(
+  "localhost:50051",
+  grpc.credentials.createInsecure()
+);
 
+// Health check
 app.get("/", (req: Request, res: Response) => {
   res.send("Server is working");
 });
 
+// Arithmetic operations
 app.get("/add", async (req: Request, res: Response) => {
   try {
     const { num1, num2 } = req.query;
@@ -171,6 +179,7 @@ app.get("/divide", async (req: Request, res: Response) => {
   }
 });
 
+// Greet
 app.get("/greet", async (req: Request, res: Response) => {
   try {
     const { firstName, lastName, age } = req.query;
@@ -195,6 +204,50 @@ app.get("/greet", async (req: Request, res: Response) => {
       }
     );
   } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Chat
+app.get("/chat", async (req: Request, res: Response) => {
+  try {
+    // Set headers for SSE
+    res.setHeader("Content-Type", "text/event-stream");
+    res.setHeader("Cache-Control", "no-cache");
+    res.setHeader("Connection", "keep-alive");
+    res.setHeader("Access-Control-Allow-Origin", "*"); // Allow CORS
+
+    const { question } = req.query;
+
+    if (!question) {
+      throw new Error("Please provide a question");
+    }
+
+    const call = chatClient.chat({
+      question: question as string,
+    });
+
+    call.on("data", (response: ChatResponse) => {
+      console.log(`Received message: ${response.message}`);
+      // Send the message to the client
+      // res.write(`event: ping\n`);
+      res.write(`data: ${JSON.stringify({ message: response.message })}\n\n`);
+    });
+
+    call.on("end", () => {
+      console.log("Streaming ended.");
+      res.end();
+    });
+
+    call.on("error", (error) => {
+      console.error(`Error: ${error.message}`);
+      res.write(
+        `event: error\ndata: ${JSON.stringify({ error: error.message })}\n\n`
+      );
+      res.end(); // End the response on error
+    });
+  } catch (error: any) {
+    console.error(error);
     res.status(500).json({ error: error.message });
   }
 });

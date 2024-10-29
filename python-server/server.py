@@ -7,12 +7,16 @@ import proto_generated.greet_pb2_grpc as greet_pb2_grpc
 from arithmetic import ArithmeticService
 import proto_generated.arithmetic_pb2_grpc as arithmetic_pb2_grpc
 
+from chat import ChatService
+import proto_generated.chat_pb2_grpc as chat_pb2_grpc
+
 
 def main():
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
 
     greet_pb2_grpc.add_GreetServiceServicer_to_server(GreetService(), server)
     arithmetic_pb2_grpc.add_ArithmeticServicer_to_server(ArithmeticService(), server)
+    chat_pb2_grpc.add_ChatServiceServicer_to_server(ChatService(), server)
 
     server.add_insecure_port("[::]:50051")
     print(f"🚀 [Server Started] Server is running on port 50051")

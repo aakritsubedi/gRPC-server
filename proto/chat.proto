@@ -1,0 +1,17 @@
+// proto buffer syntax
+syntax="proto3";
+
+// Server Methods Schema
+service ChatService {
+    rpc chat(ChatRequest) returns (stream ChatResponse);
+}
+
+// Request and Response Schema
+message ChatRequest {
+    string question = 1;
+}
+
+message ChatResponse {
+    string message = 1;
+    string type = 2;
+}

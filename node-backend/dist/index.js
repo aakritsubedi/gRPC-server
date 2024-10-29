@@ -42,6 +42,7 @@ const grpc = __importStar(require("@grpc/grpc-js"));
 // import path from "path";
 const arithmetic_1 = require("./proto-generated/arithmetic");
 const greet_1 = require("./proto-generated/greet");
+const chat_1 = require("./proto-generated/chat");
 const PORT = 4000;
 const app = (0, express_1.default)();
 app.use(body_parser_1.default.json());
@@ -53,11 +54,15 @@ app.use(body_parser_1.default.json());
 //   "localhost:50051",
 //   grpc.credentials.createInsecure()
 // );
+// gRPC Client
 const arithmeticClient = new arithmetic_1.ArithmeticClient("localhost:50051", grpc.credentials.createInsecure());
 const greetClient = new greet_1.GreetServiceClient("localhost:50051", grpc.credentials.createInsecure());
+const chatClient = new chat_1.ChatServiceClient("localhost:50051", grpc.credentials.createInsecure());
+// Health check
 app.get("/", (req, res) => {
     res.send("Server is working");
 });
+// Arithmetic operations
 app.get("/add", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { num1, num2 } = req.query;
@@ -162,6 +167,7 @@ app.get("/divide", (req, res) => __awaiter(void 0, void 0, void 0, function* () 
         res.status(500).json({ error: error.message });
     }
 }));
+// Greet
 app.get("/greet", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { firstName, lastName, age } = req.query;
@@ -181,6 +187,42 @@ app.get("/greet", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         });
     }
     catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+}));
+// Chat
+app.get("/chat", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        // Set headers for SSE
+        res.setHeader("Content-Type", "text/event-stream");
+        res.setHeader("Cache-Control", "no-cache");
+        res.setHeader("Connection", "keep-alive");
+        res.setHeader("Access-Control-Allow-Origin", "*"); // Allow CORS
+        const { question } = req.query;
+        if (!question) {
+            throw new Error("Please provide a question");
+        }
+        const call = chatClient.chat({
+            question: question,
+        });
+        call.on("data", (response) => {
+            console.log(`Received message: ${response.message}`);
+            // Send the message to the client
+            // res.write(`event: ping\n`);
+            res.write(`data: ${JSON.stringify({ message: response.message })}\n\n`);
+        });
+        call.on("end", () => {
+            console.log("Streaming ended.");
+            res.end();
+        });
+        call.on("error", (error) => {
+            console.error(`Error: ${error.message}`);
+            res.write(`event: error\ndata: ${JSON.stringify({ error: error.message })}\n\n`);
+            res.end(); // End the response on error
+        });
+    }
+    catch (error) {
+        console.error(error);
         res.status(500).json({ error: error.message });
     }
 }));

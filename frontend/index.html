@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Chat Streaming</title>
+    <style>
+      #messages {
+        border: 1px solid #ccc;
+        padding: 10px;
+        height: 300px;
+        overflow-y: scroll;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Chat with gRPC Streaming</h1>
+    <input type="text" id="question" placeholder="Ask your question..." />
+    <button id="send">Send</button>
+    <div id="messages"></div>
+
+    <script>
+      document.getElementById("send").addEventListener("click", () => {
+        const question = document.getElementById("question").value;
+
+        if (!question) {
+          alert("Please enter a question.");
+          return;
+        }
+
+        // Clear previous messages
+        document.getElementById("messages").innerHTML = "";
+
+        // Create a new EventSource to listen for messages
+        const eventSource = new EventSource(
+          `http://localhost:4000/chat?question=${question}`
+        );
+
+        eventSource.addEventListener("message", (event) => {
+          const data = JSON.parse(event.data);
+
+          if (data.message === "Streaming started...") {
+            document.getElementById("messages").innerText = "";
+          } else if (data.message === "Streaming ended.") {
+            document.getElementById("messages").innerText += `\n ✅ \n`;
+          } else {
+            document.getElementById("messages").innerText += `${data.message}`;
+          }
+
+          // Auto-scroll to the bottom
+          const messagesDiv = document.getElementById("messages");
+          messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        });
+
+        eventSource.addEventListener("error", (event) => {
+          if (event.target.readyState === EventSource.CLOSED) {
+            console.log("EventSource connection closed.");
+          } else {
+            console.error("EventSource error:", event);
+          }
+        });
+
+        eventSource.addEventListener("error", (event) => {
+          const errorData = JSON.parse(event.data);
+          const errorDiv = document.createElement("div");
+          errorDiv.textContent = `Error: ${errorData.error}`;
+          document.getElementById("messages").appendChild(errorDiv);
+
+          // Close the connection on error
+          eventSource.close();
+        });
+
+        eventSource.addEventListener("end", () => {
+          console.log("Streaming ended.");
+          eventSource.close();
+        });
+      });
+    </script>
+  </body>
+</html>
